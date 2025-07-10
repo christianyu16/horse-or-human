@@ -1,21 +1,21 @@
 import streamlit as st
 import os
 import gdown
-import urllib.request
 import tensorflow as tf
 import numpy as np
 from PIL import Image
 
 MODEL_PATH = "horse_or_human_model.h5"
-MODEL_URL = "https://drive.google.com/uc?export=download&id=1_du-Dk7x_cM9xUJs9icHeoG7bdTFOs7X"
+FILE_ID = "1_du-Dk7x_cM9xUJs9icHeoG7bdTFOs7X"
+MODEL_URL = f"https://drive.google.com/uc?id={FILE_ID}"
 
 if not os.path.exists(MODEL_PATH):
     st.write("Downloading model from Google Drive...")
-    urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+    gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
 
 model = tf.keras.models.load_model(MODEL_PATH)
 
-st.title("Horse or Human Classifier")
+st.title("🐴 Horse or Human Classifier")
 uploaded = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
 if uploaded:
