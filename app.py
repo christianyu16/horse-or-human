@@ -1,37 +1,30 @@
 import streamlit as st
+import os
+import urllib.request
 import tensorflow as tf
 import numpy as np
 from PIL import Image
 
-# Load the trained model
-@st.cache_resource
-def load_model():
-    return tf.keras.models.load_model("horse_or_human_model.h5")
+MODEL_PATH = "horse_or_human_model.h5"
+MODEL_URL = "https://drive.google.com/uc?export=download&id=1_du-Dk7x_cM9xUJs9icHeoG7bdTFOs7X"
 
-model = load_model()
+if not os.path.exists(MODEL_PATH):
+    st.write("Downloading model from Google Drive...")
+    urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
 
-# App title
-st.title("🐴 Horse or Human Classifier")
-st.write("Upload an image and I'll tell you if it's a **horse** or a **human**!")
+model = tf.keras.models.load_model(MODEL_PATH)
 
-# File uploader
+st.title("Horse or Human Classifier")
 uploaded = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
 if uploaded:
-    # Display uploaded image
     image = Image.open(uploaded).convert("RGB")
-    st.image(image, caption="Uploaded Image", use_column_width=True)
+    st.image(image, use_column_width=True)
 
-    # Preprocess the image
-    img = image.resize((150, 150))  # Resize to match training
-    img_array = tf.keras.preprocessing.image.img_to_array(img)
-    img_array = np.expand_dims(img_array / 255.0, axis=0)  # Normalize and batch
+    img = image.resize((150, 150))
+    x = np.expand_dims(np.array(img) / 255.0, 0)
+    pred = model.predict(x)[0][0]
 
-    # Prediction
-    prediction = model.predict(img_array)[0][0]
-    label = "Human 🧍" if prediction > 0.5 else "Horse 🐴"
-    confidence = prediction if prediction > 0.5 else 1 - prediction
-
-    # Show prediction
-    st.markdown(f"### Prediction: **{label}**")
-    st.markdown(f"Confidence: `{confidence:.2%}`")
+    label = "Human" if pred > 0.5 else "Horse"
+    conf = pred if pred > 0.5 else 1 - pred
+    st.write(f"**{label}** with {conf:.2%} confidence")
